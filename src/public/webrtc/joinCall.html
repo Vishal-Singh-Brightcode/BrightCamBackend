@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CONNECT</title>
+    <link rel="stylesheet" href="http://localhost:4000/styles.css" />
+  </head>
+  <script
+    src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+    integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+    crossorigin="anonymous"
+  ></script>
+  <!-- Script for joining the meeting -->
+  <script src="http://localhost:4000/joinCall.js"></script>
+
+  <body>
+    <div class="container" id="joinCallScreen">
+      <div style="display: none">
+        <p id="meetingId">#MEETING_ID#</p>
+        <p id="passcode">#MEETING_PASSCODE#</p>
+        <p id="hostId">#HOST_ID#</p>
+        <p id="joineeId">#JOINEE_ID#</p>
+      </div>
+      <h1>CONNECT</h1>
+      <div class="form">
+        <label for="meeting-id">Meeting ID:</label>
+        <input
+          type="text"
+          id="meeting-id"
+          name="meeting-id"
+          placeholder="Enter meeting id"
+        />
+        <label for="meeting-passcode">Passcode:</label>
+        <input
+          type="text"
+          id="meeting-passcode"
+          name="meeting-passcode"
+          placeholder="Enter meeting passcode"
+        />
+        <label for="display-name">Display Name:</label>
+        <input
+          type="text"
+          id="display-name"
+          name="display-name"
+          placeholder="Enter display name(Optional)"
+        />
+        <button id="join-button" onclick="connect()">Join</button>
+      </div>
+    </div>
+
+    <div class="container meeting-room" id="meetingRoom">
+      <div class="videos-container">
+        <div class="remote-videos-container" id="remoteVideosContainer"></div>
+        <div>
+          <h4 id="joinee-display-name" style="text-align: center; color: #fff">
+            You
+          </h4>
+          <video class="local-video" id="localVideo" autoplay></video>
+        </div>
+      </div>
+
+      <div class="navbar">
+        <div class="nav-menu-toggle">
+          <label class="video-toggle-btn" for="video-toggle-checkbox">
+            <input type="checkbox" id="video-toggle-checkbox" checked />
+            <span class="slider"></span>
+          </label>
+          <span style="font-size: small">Video ON/OFF</span>
+        </div>
+
+        <div class="nav-menu-toggle">
+          <label class="audio-toggle-btn" for="audio-toggle-checkbox">
+            <input type="checkbox" id="audio-toggle-checkbox" checked />
+            <span class="slider"></span>
+          </label>
+          <span style="font-size: small">Mute/Unmute</span>
+        </div>
+
+        <button class="nav-menu-item" onclick="openChatBox()">Chat</button>
+        <button class="nav-menu-item" onclick="showParticipants()">
+          Participants
+        </button>
+        <button class="nav-menu-item" onclick="raiseHand()">Raise Hand</button>
+
+        <button class="nav-menu-item" onclick="shareScreen()">
+          Share Screen
+        </button>
+        <button class="nav-menu-item" onclick="leave()">Leave</button>
+      </div>
+
+      <div class="chatbox-container" id="chats">
+        <button class="close-button" onclick="closeChatBox()">Close</button>
+        <h3 style="text-align: center">Chatbox</h3>
+        <button style="padding: 10" onclick="toggleDropdown()" class="dropbtn">
+          Send this message to
+        </button>
+        <div class="participants-dropdown">
+          <div id="myDropdown" class="participants-dropdown-content">
+            <p>Person 1</p>
+            <p>Person 2</p>
+            <p>Person 3</p>
+            <p>Person 4</p>
+            <p>Everyone</p>
+          </div>
+        </div>
+
+        <div id="chatbox" class="chatbox"></div>
+
+        <div>
+          <div class="messageBox" id="messageBox"></div>
+          <span>Message</span>
+          <input type="text" id="msg" name="msg" />
+          <button
+            style="
+              background-color: #595599;
+              margin: 10px 0px;
+              padding: 5px;
+              border-radius: 5px;
+              color: #fff;
+              border: 0;
+            "
+            onclick="sendMessage()"
+          >
+            Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("onload", fillUpMeetingDetails());
+
+      const videoToggleSwitch = document.getElementById(
+        "video-toggle-checkbox"
+      );
+
+      videoToggleSwitch.addEventListener("change", function () {
+        console.log("video toggled", this.checked, videoToggleSwitch);
+
+        toggleVideo(this.checked);
+      });
+
+      const audioToggleSwitch = document.getElementById(
+        "audio-toggle-checkbox"
+      );
+
+      audioToggleSwitch.addEventListener("change", function () {
+        console.log("audio toggled", this.checked, audioToggleSwitch);
+
+        toggleAudio(this.checked);
+      });
+    </script>
+  </body>
+</html>

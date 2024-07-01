@@ -1,14 +1,23 @@
 import { Router } from "express";
-import { login, sendVerificationCode, signUp, verifyOTP } from "../../controllers/auth";
+import {
+  login,
+  saveBiometricsPublicKey,
+  sendVerificationCode,
+  signUp,
+  validateGoogleLogin,
+  verifyOTP,
+} from "../../controllers/auth";
 
 export const authRouter = Router();
 
-authRouter.post('/send_verification_code', sendVerificationCode);
+authRouter.post("/send-verification-code", sendVerificationCode);
 
-authRouter.post('/sign-up', signUp);
+authRouter.post("/sign-up", signUp);
 
-authRouter.post('/login', login);
+authRouter.post("/login", login);
 
-authRouter.post('/verify-code', verifyOTP);
+authRouter.post("/verify-code", verifyOTP);
 
+authRouter.post("/save-biometrics-pub-key", saveBiometricsPublicKey);
 
+authRouter.post("/validate-user", validateGoogleLogin);

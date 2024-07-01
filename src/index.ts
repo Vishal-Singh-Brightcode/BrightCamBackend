@@ -1,11 +1,20 @@
 // server.js
-import express from 'express';
-import http from 'http';
-const socketIo = require('socket.io');
-import cors from 'cors';
-import { authRouter } from './routes/auth/index'
-import { connectToDatabase } from './configs/dbConfig';
-import bodyParser from 'body-parser';
+import express from "express";
+import https from "http";
+const socketIo = require("socket.io");
+import cors from "cors";
+import { authRouter } from "./routes/auth/index";
+import { connectToDatabase } from "./configs/dbConfig";
+import bodyParser from "body-parser";
+const path = require("path");
+import fs from "fs/promises";
+import jwtMiddleware from "./middlewares/auth";
+import { userRouter } from "./routes/user/index";
+import { joinCall } from "./controllers/user_utility";
+import { intitializeSocketConnection } from "./services/socket-io";
+import { meetingRouter } from "./routes/meeting";
+import { sendPushNotification } from "./services/pushNotifications";
+import schedule from "node-schedule";
 
 const PORT = process.env.PORT || 4000;
 
@@ -15,42 +24,60 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
-  console.log("Url:", req.originalUrl, '\n', "Method:", req.method, '\n', "Query params:", req.query, "Params:", req.params, '\n', "Body:", req.body);
+  console.log(
+    "Url:",
+    req.originalUrl,
+    "\n",
+    "Method:",
+    req.method,
+    "\n",
+    "Query params:",
+    req.query,
+    "Params:",
+    req.params,
+    "\n",
+    "Body:",
+    req.body
+  );
+
   next();
 });
 
 app.use(cors());
 
-connectToDatabase();
+app.get("/greet-me", (req, res) => {
+  const name = req.query?.name || "User";
+  res.status(200).send(`Hello ${name} `);
+});
+
+app.get("/push-test", async (req, res) => {
+  await sendPushNotification();
+  res.status(200).send("ok");
+});
+
+app.get("/join-call/:hostId/:joineeId/:meetingId/:passcode", joinCall);
 
 app.use(authRouter);
 
-const server = http.createServer(app);
-const io = socketIo(server);
+app.use(userRouter);
 
-const users: any = {};
+app.use(meetingRouter);
+//app.use(jwtMiddleware);
 
-io.on('connection', (socket: any) => {
-  console.log('a user connected');
+//const staticFilesPath = path.join(__dirname, "public/assetLinks.json");
 
-  socket.on('join', (userId: any) => {
-    console.log("User with id ", userId, " joined the chat");
-    users[userId] = socket.id;
-  });
+//app.use("/.well-known/.assetlinks.json", express.static(staticFilesPath));
 
-  socket.on('send_message', ({ senderId, receiverId, message }: { senderId: string, receiverId: string, message: string }) => {
-    const receiverSocketId = users[receiverId];
-    io.to(receiverSocketId).emit('receive_message', {
-      senderId,
-      message,
-    });
-  });
+const imagesPath = path.join(__dirname, "public/assets");
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  })
-});
+app.use(express.static(imagesPath));
+app.use(express.static(path.join(__dirname, "public/webrtc")));
+
+const server = https.createServer(app);
+
+intitializeSocketConnection(server);
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  connectToDatabase();
 });
