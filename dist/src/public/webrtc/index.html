@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OFLEP CONNECT</title>
+  </head>
+  <script
+    src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+    integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+    crossorigin="anonymous"
+  ></script>
+  <style>
+    .meeting-room {
+      margin: 5px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #ede8f5;
+    }
+
+    .chatbox-container {
+      display: none;
+      flex-direction: column;
+      background-color: white;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      left: 10%;
+      top: 50%;
+      transform: translate(-10%, -50%);
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .chatbox {
+      display: flex;
+      width: 400px;
+      box-sizing: border-box;
+      flex-direction: column;
+      height: 400px;
+      /* border: 1px solid black; */
+      margin: 10px;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    .message {
+      width: 50%;
+      align-self: flex-start;
+      margin: 5px;
+      padding: 5px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .message-header {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+
+    .message-content {
+      margin: 1px 5px;
+      color: black;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+
+    .profile-pic {
+      margin: 1px;
+      height: 30px;
+      width: 30px;
+    }
+
+    .message-subHeader {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .message-from {
+      margin: 1px;
+      color: black;
+      font-size: 12px;
+    }
+
+    .message-time {
+      margin: 1px;
+      color: black;
+      font-size: 12px;
+    }
+
+    .close-button {
+      color: "black";
+      border: 0;
+    }
+
+    .nav-menu {
+      background-color: #fff;
+      display: flex;
+      align-self: stretch;
+      align-items: center;
+      justify-content: center;
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid black;
+    }
+
+    .nav-menu-item {
+      padding: 5px 10px;
+      margin: 5px 10px;
+      background-color: #595599;
+      color: #ede8f5;
+      border: 0;
+      border-radius: 0px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .participants-btn:hover {
+      background-color: blue;
+    }
+
+    .dropdown {
+      align-self: flex-start;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      padding: 12px 16px;
+      z-index: 1;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .dropdown-content p:hover {
+      background-color: #595599;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
+
+    input:checked + .slider {
+      background-color: #595599;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #595599;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    .meeting-room {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 10px;
+      margin: 10px;
+      /* border: 1px solid black */
+    }
+
+    .videos-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .remote-videos-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      border: 1px solid black;
+    }
+
+    .remote-video {
+      height: "25%";
+      width: "25%";
+      margin: 5px;
+      border: 0.5px solid black;
+      object-fit: cover;
+    }
+
+    .local-video {
+      height: 200px;
+      width: 100%;
+      margin: 5px;
+      border: 0.5px solid black;
+      object-fit: cover;
+    }
+
+    /* Dropdown container */
+    .participants-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Dropdown button */
+    .dropbtn {
+      /* background-color: #4caf50;
+      color: white; */
+      /* padding: 10px; */
+      font-size: 16px;
+      /* border: none; */
+      cursor: pointer;
+    }
+
+    /* Dropdown content (hidden by default) */
+    .participants-dropdown-content {
+      display: none;
+      padding: 10px;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    /* Show the dropdown menu on hover */
+    .show {
+      display: block;
+    }
+
+    .displayName {
+      text-align: center;
+
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+
+  <body
+    style="
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    "
+  >
+    <div class="meeting-room">
+      <div>
+        <label for="joinee" name="displayName">Your Name</label>
+        <input type="text" id="joinee" name="joinee" />
+        <button onclick="connect()">Connect</button>
+      </div>
+      <div>
+        <input type="text" id="callee" name="callee" />
+        <button onclick="callTo()">Connect with</button>
+      </div>
+      <div style="display: none">
+        <span id="invitee">#INVITEE#</span>
+        <span id="host">#HOST_EMAIL#</span>
+      </div>
+      <div>
+        <h1 style="text-align: center; color: #000">Welcome to CONNECT</h1>
+      </div>
+
+      <div class="videos-container">
+        <div class="remote-videos-container" id="remoteVideosContainer"></div>
+        <div>
+          <h4 style="text-align: center">You</h4>
+          <video class="local-video" id="localVideo" autoplay muted></video>
+        </div>
+      </div>
+
+      <div class="nav-menu">
+        <label class="switch">
+          <input type="checkbox" id="videoToggler" checked />
+          <span class="slider round"></span>
+        </label>
+        <span style="font-size: 12px; margin: 0px 5px; font-weight: 600"
+          >Turn Video On/Off</span
+        >
+
+        <button class="nav-menu-item" onclick="shareScreen()">
+          Share Screen
+        </button>
+
+        <div class="dropdown nav-menu-item">
+          <span style="color: #fff"> Participants</span>
+          <div class="dropdown-content" style="color: #000">
+            <p>Person 1</p>
+            <p>Person 2</p>
+            <p>Person 3</p>
+            <p>Person 4</p>
+          </div>
+        </div>
+
+        <button onclick="raiseHand()" class="nav-menu-item">Raise Hand</button>
+
+        <button onclick="openChatBox()" class="nav-menu-item">Chats</button>
+
+        <button onclick="callHost()" class="nav-menu-item">Join Call</button>
+
+        <button onclick="disconnect()" class="nav-menu-item">Leave room</button>
+      </div>
+
+      <div class="chatbox-container" id="chats">
+        <button class="close-button" onclick="closeChatBox()">Close</button>
+        <h3 style="text-align: center">Chatbox</h3>
+
+        <div class="participants-dropdown">
+          <button
+            style="padding: 0; margin: 0"
+            onclick="toggleDropdown()"
+            class="dropbtn"
+          >
+            Send this message to
+          </button>
+
+          <div id="myDropdown" class="participants-dropdown-content">
+            <p>Person 1</p>
+            <p>Person 2</p>
+            <p>Person 3</p>
+            <p>Person 4</p>
+            <p>Everyone</p>
+          </div>
+        </div>
+
+        <div id="chatbox" class="chatbox">
+          <div class="message" style="align-self: flex-start">
+            <div class="message-header">
+              <div class="message-subHeader">
+                <img class="profile-pic" id="demo-user" />
+                <p id="msg-from" class="message-from">Miss Marie</p>
+              </div>
+              <p id="msg-time" class="message-time">msg time</p>
+            </div>
+            <p class="message-content">How are you doing today ?</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="messageBox" id="messageBox"></div>
+          <span>Message</span>
+          <input type="text" id="msg" name="msg" />
+          <button
+            style="
+              background-color: #595599;
+              margin: 10px 0px;
+              padding: 5px;
+              border-radius: 5px;
+              color: #fff;
+              border: 0;
+            "
+            onclick="sendMessage()"
+          >
+            Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.onload = () => {
+        const demoUser = document.getElementById("demo-user");
+        demoUser.src = `${url}/user.png`;
+      };
+      function callTo() {
+        let callee = document.getElementById("callee").value;
+        joinCall(callee);
+      }
+      const host = document.getElementById("host").textContent;
+      const invitee = document.getElementById("joinee").value;
+
+      // Get references to the local and remote video elements
+      const localVideo = document.getElementById("localVideo");
+      const remoteVideo = document.getElementById("remoteVideo");
+
+      const peerConnections = {};
+      const remoteStreams = [];
+
+      let localStream;
+      let isNegotiating = false;
+      let isCalling = false;
+      let remoteCandidates = {};
+
+      const participants = [];
+      const url = "http://localhost:4000";
+      // socket connection initialized
+      const socket = io(url, {
+        autoConnect: false,
+        transports: ["websocket"],
+      });
+
+      function connect() {
+        socket.connect();
+      }
+
+      // socket events
+      socket.on("connect", () => {
+        console.log("Connected to the server");
+        socket.emit("joining", {
+          userId: document.getElementById("joinee").value,
+        });
+      });
+
+      socket.on("reconnect", () => {
+        console.log("Re-Connected to the server");
+        socket.emit("joining", {
+          userId: document.getElementById("joinee").value,
+        });
+      });
+
+      socket.on("offer", (data) => {
+        const { to, from, offer } = data;
+        console.log(`Got offer from ${from} for ${to}`);
+        console.log("pc", peerConnections);
+        answerCall(data);
+      });
+
+      socket.on("answer", (data) => {
+        const { to, from, answer } = data;
+        peerConnections[from].setRemoteDescription(answer);
+        console.log(`Got answer from ${from} for ${to}`);
+        processCandidates(from);
+      });
+
+      // Handle incoming "candidate" from the server
+      socket.on("ice-candidate", (data) => {
+        const { to, from, iceCandidate } = data;
+        //console.log(`Got ice candidate from ${from}`);
+        if (
+          peerConnections.hasOwnProperty(from) &&
+          peerConnections[from].remoteDescription
+        ) {
+          peerConnections[from].addIceCandidate(
+            new RTCIceCandidate(iceCandidate)
+          );
+        } else {
+          if (remoteCandidates.hasOwnProperty(from)) {
+            remoteCandidates[from].push(new RTCIceCandidate(iceCandidate));
+          } else {
+            remoteCandidates[from] = [];
+            remoteCandidates[from].push(new RTCIceCandidate(iceCandidate));
+          }
+        }
+        processCandidates(from);
+      });
+
+      socket.on("message", (data) => {
+        showMessage(data);
+      });
+
+      socket.on("new-participant-added", (data) => {
+        console.log(`A new participant ${data.participant} is connected`);
+        joinCall(data.participant);
+      });
+
+      socket.on("participant-disconnected", (data) => {
+        // let participantIndex = participants.indexOf(data.participant);
+        // if (participantIndex >= 0) {
+        //   participants[participantIndex] =
+        //     participants[participants.length - 1];
+        //   participants.pop();
+        //   console.log(` ${data.participant} left the call`);
+        // }
+        console.log(`${data.participant} got disconnected`);
+
+        // 1. update remote stream here
+      });
+
+      socket.on("description-updated", async (data) => {
+        const { to, from, updatedDescription } = data;
+        // Set remote description
+        console.log("Got updated description from ", from, " for ", to);
+        //await peerConnections[from].setRemoteDescription(updatedDescription);
+      });
+
+      // functions to handle calling
+      const callHost = async () => {
+        await joinCall(host);
+      };
+
+      const joinCall = async (to) => {
+        if (!socket.active) {
+          socket.connect();
+        }
+
+        let sessionConstraints = {
+          mandatory: {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true,
+            VoiceActivityDetection: true,
+          },
+        };
+        if (!localStream) {
+          localStream = await getLocalMediaStream();
+          localVideo.srcObject = localStream;
+        }
+
+        const pc = initializePeerConnection(to);
+
+        localStream
+          .getTracks()
+          .forEach((track) => pc.addTrack(track, localStream));
+
+        const offer = await pc.createOffer(sessionConstraints);
+
+        await pc.setLocalDescription(offer);
+
+        socket.emit("offer", {
+          to: to,
+          from: document.getElementById("joinee").value,
+          offer: pc.localDescription,
+        });
+
+        console.log(
+          `Offer sent to ${to} by ${document.getElementById("joinee").value}`
+        );
+      };
+
+      const processCandidates = (peer) => {
+        if (peer in remoteCandidates) {
+          remoteCandidates[peer].forEach((candidate) => {
+            if (
+              peerConnections.hasOwnProperty(peer) &&
+              peerConnections[peer].remoteDescription
+            ) {
+              peerConnections[peer].addIceCandidate(candidate);
+            }
+          });
+        }
+      };
+
+      const answerCall = async ({ to, from, offer }) => {
+        //capture local media stream and  initialize a new peer connection
+        localStream = await getLocalMediaStream();
+        localVideo.srcObject = localStream;
+
+        const pc = initializePeerConnection(from);
+
+        localStream.getTracks().forEach((track) => {
+          pc.addTrack(track, localStream);
+        });
+        await pc.setRemoteDescription(offer);
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        socket.emit("call-answered", {
+          to: from,
+          from: to,
+          answer: pc.localDescription,
+        });
+        console.log(`Call from ${from} for ${to} answered`);
+      };
+
+      const initializePeerConnection = (peer) => {
+        // Configuration for the RTCPeerConnection
+        const configuration = {
+          iceServers: [
+            {
+              urls: "stun:stun.l.google.com:19302",
+            },
+            {
+              urls: "stun:stun1.l.google.com:19302",
+            },
+            {
+              urls: "stun:stun2.l.google.com:19302",
+            },
+          ],
+        };
+
+        const pc = new RTCPeerConnection(configuration);
+
+        peerConnections[peer] = pc;
+
+        //register event listeners here
+
+        peerConnections[peer].onicecandidate = ({ candidate }) => {
+          if (candidate) {
+            socket.emit("ice-candidate", {
+              to: peer,
+              from: document.getElementById("joinee").value,
+              iceCandidate: candidate,
+            });
+            //  console.log(`Sent ice candidate to ${peer}`);
+          }
+        };
+
+        peerConnections[peer].ontrack = ({ streams: [stream] }) => {
+          // console.log(`Getting stream from ${peer}`);
+          if (!remoteStreams.includes(peer)) {
+            remoteStreams.push(peer);
+            const remoteVideosContainer = document.getElementById(
+              "remoteVideosContainer"
+            );
+            const videoBox = document.createElement("div");
+
+            const remoteVideo = document.createElement("video");
+            remoteVideo.autoplay = true;
+            remoteVideo.muted = true;
+            remoteVideo.classList.add("remote-video");
+            const remoteUser = document.createElement("h5");
+            remoteUser.classList.add("displayName");
+            remoteUser.textContent = peer;
+
+            remoteVideo.srcObject = stream;
+            videoBox.appendChild(remoteUser);
+            videoBox.appendChild(remoteVideo);
+            remoteVideosContainer.appendChild(videoBox);
+          }
+        };
+
+        peerConnections[peer].oniceconnectionstatechange = (event) => {
+          console.log(
+            "iceConnectionState => ",
+            peerConnections[peer].iceConnectionState
+          );
+        };
+
+        peerConnections[peer].onconnectionstatechange = (event) => {
+          console.log(
+            "Peer connection state => ",
+            peerConnections[peer].connectionState
+          );
+          if (peerConnections[peer].connectionState == "closed") {
+            peerConnections[peer].close();
+          } else if (peerConnections[peer].connectionState == "connected") {
+            ///////
+            if (!participants.includes(peer)) {
+              participants.push(peer);
+            }
+          }
+        };
+
+        console.log(`Peer connection for ${peer} initialized`);
+        return peerConnections[peer];
+      };
+
+      const getLocalMediaStream = async () => {
+        let mediaConstraints = {
+          audio: false,
+          video: {
+            frameRate: 30,
+            facingMode: "user",
+          },
+        };
+
+        if (localStream) {
+          return localStream;
+        } else {
+          const mediaStream = await navigator.mediaDevices.getUserMedia(
+            mediaConstraints
+          );
+
+          return mediaStream;
+        }
+      };
+
+      const shareScreen = async () => {
+        const displayMediaOptions = {
+          video: {
+            displaySurface: "browser",
+          },
+          audio: {
+            suppressLocalAudioPlayback: false,
+          },
+          preferCurrentTab: false,
+          selfBrowserSurface: "exclude",
+          systemAudio: "include",
+          surfaceSwitching: "include",
+          monitorTypeSurfaces: "include",
+        };
+        const screenStream = await navigator.mediaDevices.getDisplayMedia(
+          displayMediaOptions
+        );
+
+        screenStream.getTracks().forEach((track) => {
+          for (let peer in peerConnections) {
+            peerConnections[peer].addTrack(track, localStream);
+          }
+        });
+
+        for (let peer in peerConnections) {
+          // Create updated local description
+          const updatedDescription = await peerConnections[peer].createOffer();
+
+          // Set local description
+          await peerConnections[peer].setLocalDescription(updatedDescription);
+          // Send updated description to remote peer
+
+          //socket.emit('start-screen-share', { to: peer, from: document.getElementById('joinee').value, updatedDescription });
+
+          joinCall(peer);
+        }
+      };
+
+      // const stopScreenSharing = () => {
+      //   screenStream.getTracks().forEach((track) => track.stop());
+      // };
+
+      const raiseHand = () => {
+        socket.emit("raise-hand", {
+          to: host,
+          from: document.getElementById("joinee").value,
+        });
+      };
+
+      const disconnect = () => {
+        if (localStream) {
+          localStream.getTracks().forEach((track) => {
+            track.stop(); // Stop each track
+          });
+        }
+        if (localVideo) {
+          localVideo.srcObject = null;
+        }
+
+        for (let peer in peerConnections) {
+          peerConnections[peer].close();
+        }
+      };
+
+      const openChatBox = () => {
+        let chatbox = document.getElementById("chats");
+        chatbox.style.display = "flex";
+      };
+
+      const closeChatBox = () => {
+        let chatbox = document.getElementById("chats");
+        chatbox.style.display = "none";
+      };
+
+      const sendMessage = () => {
+        let to = document.getElementById("host").textContent;
+
+        let fromUser = document.getElementById("invitee").textContent;
+
+        let msg = document.getElementById("msg").value;
+
+        let chatbox = document.getElementById("chatbox");
+
+        let messageBox = document.createElement("div");
+
+        messageBox.style.alignSelf = "flex-end";
+
+        let messageHeader = document.createElement("div");
+
+        let messageSubHeader = document.createElement("div");
+
+        let messageFrom = document.createElement("p");
+
+        let proflePic = document.createElement("img");
+
+        let messageTime = document.createElement("p");
+
+        let message = document.createElement("p");
+
+        messageFrom.textContent = "You";
+
+        messageTime.textContent = new Date().toLocaleString();
+
+        proflePic.src = `${url}/user.png`;
+
+        message.textContent = msg;
+
+        messageBox.classList.add("message");
+
+        proflePic.classList.add("profile-pic");
+
+        message.classList.add("message-content");
+
+        messageTime.classList.add("message-time");
+
+        messageHeader.classList.add("message-header");
+
+        messageSubHeader.classList.add("message-subHeader");
+
+        messageFrom.classList.add("message-from");
+
+        messageBox.appendChild(messageHeader);
+
+        messageHeader.appendChild(messageSubHeader);
+
+        messageBox.appendChild(message);
+
+        messageSubHeader.appendChild(proflePic);
+
+        messageSubHeader.appendChild(messageFrom);
+
+        messageHeader.appendChild(messageTime);
+
+        chatbox.appendChild(messageBox);
+
+        // console.log("message sent", to, from, msg);
+        socket.emit("send-msg", { to, from: fromUser, msg });
+
+        msg.value = "";
+      };
+
+      const showMessage = ({ to, from, msg }) => {
+        let fromUser = from;
+
+        let chatbox = document.getElementById("chatbox");
+
+        let messageBox = document.createElement("div");
+
+        messageBox.style.alignSelf = "flex-start";
+
+        let messageHeader = document.createElement("div");
+
+        let messageSubHeader = document.createElement("div");
+
+        let messageFrom = document.createElement("p");
+
+        let proflePic = document.createElement("img");
+
+        let messageTime = document.createElement("p");
+
+        let message = document.createElement("p");
+
+        messageFrom.textContent = fromUser;
+
+        messageTime.textContent = new Date().toLocaleString();
+
+        proflePic.src = `${url}/user.png`;
+
+        message.textContent = msg;
+
+        messageBox.classList.add("message");
+
+        proflePic.classList.add("profile-pic");
+
+        message.classList.add("message-content");
+
+        messageTime.classList.add("message-time");
+
+        messageHeader.classList.add("message-header");
+
+        messageSubHeader.classList.add("message-subHeader");
+
+        messageFrom.classList.add("message-from");
+
+        messageBox.appendChild(messageHeader);
+
+        messageHeader.appendChild(messageSubHeader);
+
+        messageBox.appendChild(message);
+
+        messageSubHeader.appendChild(proflePic);
+
+        messageSubHeader.appendChild(messageFrom);
+
+        messageHeader.appendChild(messageTime);
+
+        chatbox.appendChild(messageBox);
+      };
+
+      const videoToggleSwitch = document.getElementById("videoToggler");
+
+      videoToggleSwitch.addEventListener("change", async function () {
+        let mediaConstraints = {
+          audio: false,
+          video: {
+            frameRate: 30,
+            facingMode: "user",
+          },
+        };
+        if (this.checked) {
+          // Execute action when toggle switch is turned on
+          console.log("Toggle switch is ON");
+          localStream.getVideoTracks()[0].enabled = true;
+        } else {
+          // Execute action when toggle switch is turned off
+          console.log("Toggle switch is OFF");
+          // Perform your action here
+
+          if (localStream) {
+            localStream.getVideoTracks()[0].enabled = false;
+          }
+        }
+      });
+
+      function toggleDropdown() {
+        var dropdown = document.getElementById("myDropdown");
+        dropdown.classList.toggle("show");
+      }
+
+      // Close the dropdown menu if the user clicks outside of it
+      window.onclick = function (event) {
+        if (!event.target.matches(".dropbtn")) {
+          var dropdowns = document.getElementsByClassName(
+            "participants-dropdown-content"
+          );
+          for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains("show")) {
+              openDropdown.classList.remove("show");
+            }
+          }
+        }
+      };
+    </script>
+  </body>
+</html>

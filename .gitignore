@@ -1,6 +1,6 @@
 node_modules/
 .env
 # Ignore all folders inside dist/
-dist/*
+dist/src/*
 # Except for folder5
-!dist/public/
+!dist/src/public/

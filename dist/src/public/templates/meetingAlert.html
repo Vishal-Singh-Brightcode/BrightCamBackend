@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meeting Alert</title>
+</head>
+
+<body style="
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0px solid black;
+    ">
+    <div style="
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        align-self: center;
+
+        margin: 5px;
+        padding: 5px;
+        border: 0px solid black;
+      ">
+        <div style="
+          flex: 1;
+          align-items: center;
+          justify-content: center;
+          align-self: center;
+          flex-direction: column;
+          color: #000;
+          margin: 5px;
+          padding: 5px;
+          border: 0px solid black;
+        ">
+            <div style="background-color: #ede8f5;padding-top: 5px;padding-bottom: 5px;">
+                <h2 style="text-align: center;color: #000;">Invitation</h2>
+            </div>
+            <h4 style="margin-bottom: 1px">Hello #INVITEE#,</h4>
+            <p style="margin: 1px 0px">
+                You have been invited by #MEETING_HOST# to join their call ,scheduled on #MEETING_DATE# at #START_TIME#
+                (Duration: #DURATION# minutes)
+            </p>
+        </div>
+
+        <div style="
+          flex: 1;
+          align-items: center;
+          justify-content: center;
+          align-self: center;
+          flex-direction: column;
+          color: #000;
+          margin: 5px;
+          padding: 5px;
+          border: 0px solid black;
+        ">
+            <p style="margin: 10px 0px 5px 0px"><b>Meeting Details</b></p>
+            <p style="margin: 0">Host:&nbsp;<b>#MEETING_HOST#</b></p>
+
+            <!-- <p>App Link:&nbsp;<a href="#APP_LINK#">#APP_LINK#</a></p> -->
+            <p style="margin: 0">Id:&nbsp;<b>#MEETING_ID#</b></p>
+            <p style="margin: 0">Passcode:&nbsp;<b>#MEETING_PASSCODE#</b></p>
+
+            <p><b>Important:</b> Use the above provided crendetials to join the meeting when asked for.</p>
+
+            <button onclick="redirect()" style="
+            padding: 10px;
+            margin: 15px 5px 10px 0px;
+            border-radius: 5px;
+            border: 1px solid #595599;
+            background-color: #595599;
+            color: #ede8f5;
+            align-self: center;
+          ">
+                <a id="Meeting_link" href="#MEETING_LINK#" style="text-decoration: none;color: #ede8f5;">Join
+                    Meeting</a>
+            </button>
+        </div>
+
+
+        <div style="   margin: 5px;
+    padding: 5px;  border: 0px solid black;color: #000;">
+            <p style="margin: 0px 0px 0px 0px">Regards,</p>
+            <p style="margin: 0px">OFLEP</p>
+        </div>
+
+        <div
+            style="margin: 15px 5px;align-items: center;  border: 0px solid black;background-color: #ede8f5;padding-top: 5px;padding-bottom: 5px;">
+            <p style="margin: 0px 0px 0px 0px ;text-align: center;color: #000;">
+                For any query or support, contact us at
+                <a href="#SUPPORT_MAIL#">#SUPPORT_MAIL#</a>
+            </p>
+        </div>
+
+    </div>
+    </div>
+    <script>
+        function redirect() {
+            let meetingLink = document.getElementById("Meeting_link").href;
+            window.location.href = meetingLink;
+            return;
+        }
+    </script>
+</body>
+
+</html>
