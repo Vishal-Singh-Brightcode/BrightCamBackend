@@ -1,10 +1,20 @@
+import Creds from "../../models/serviceAccount.model";
+
 const admin = require("firebase-admin");
 
-// Initialize Firebase Admin SDK
-const serviceAccount = require("./oflep-17a74-7b088233e43e.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+const getServiceAccountCreds = async () => {
+  const serviceAccount = await Creds.findOne({
+    _id: process.env.SERVICE_ACCOUNT_ID,
+  });
+
+  admin.initializeApp({
+    credential: admin.credential.cert(
+      JSON.parse(JSON.stringify(serviceAccount))
+    ),
+  });
+};
+
+getServiceAccountCreds();
 
 // Define message payload
 const message = {
